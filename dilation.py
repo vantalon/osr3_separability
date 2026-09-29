@@ -1,48 +1,51 @@
 import numpy as np
 from scipy.linalg import schur
 from wu_dilation import dilation
-from utils import  *
+from utils import *
 
 
 def psd_sqrt_and_range(A, tol=1e-12):
-        """
-        Compute sqrt(A) and an orthonormal basis for ran(sqrt(A)),
-        assuming A is Hermitian positive semidefinite.
+    """
+    Compute sqrt(A) and an orthonormal basis for ran(sqrt(A)),
+    assuming A is Hermitian positive semidefinite.
 
-        Parameters
-        ----------
-        A : ndarray, shape (n, n)
-            Hermitian positive semidefinite matrix.
-        tol : float
-            Numerical tolerance for determining positive eigenvalues.
-            Default is 1e-12.
+    Parameters
+    ----------
+    A : ndarray, shape (n, n)
+        Hermitian positive semidefinite matrix.
+    tol : float
+        Numerical tolerance for determining positive eigenvalues.
+        Default is 1e-12.
 
-        Returns
-        -------
-        sqrtA : ndarray, shape (n, n)
-            Square root of A.
-        V : ndarray, shape (n, k)
-            Orthonormal basis for ran(sqrt(A)), where k is the rank of sqrt(A).
-        """
-        A = (A + A.conj().T) / 2
+    Returns
+    -------
+    sqrtA : ndarray, shape (n, n)
+        Square root of A.
+    V : ndarray, shape (n, k)
+        Orthonormal basis for ran(sqrt(A)), where k is the rank of sqrt(A).
+    """
+    A = (A + A.conj().T) / 2
 
-        eigvals, eigvecs = np.linalg.eigh(A)
+    eigvals, eigvecs = np.linalg.eigh(A)
 
-        # Remove tiny negative eigenvalues caused by roundoff.
-        if np.min(eigvals) < -tol:
-            raise ValueError(f"Defect matrix is not positive semidefinite. {np.min(eigvals)}")
+    # Remove tiny negative eigenvalues caused by roundoff.
+    if np.min(eigvals) < -tol:
+        raise ValueError(
+            f"Defect matrix is not positive semidefinite. {np.min(eigvals)}"
+        )
 
-        eigvals = np.maximum(eigvals, 0.0)
+    eigvals = np.maximum(eigvals, 0.0)
 
-        sqrtA = (eigvecs * np.sqrt(eigvals)) @ eigvecs.conj().T
+    sqrtA = (eigvecs * np.sqrt(eigvals)) @ eigvecs.conj().T
 
-        # ran(sqrt(A)) corresponds to the strictly positive eigenvalues.
-        mask = eigvals > tol
-        V = eigvecs[:, mask]
+    # ran(sqrt(A)) corresponds to the strictly positive eigenvalues.
+    mask = eigvals > tol
+    V = eigvecs[:, mask]
 
-        return sqrtA, V
+    return sqrtA, V
 
-def minimal_unitary_dilation(T, theta = 0,  tol=1e-14):
+
+def minimal_unitary_dilation(T, theta=0, tol=1e-14):
     """
     Construct the (n+d)-dimensional unitary dilation
         U = [[T,                 D_{T*} V_*],
@@ -55,7 +58,7 @@ def minimal_unitary_dilation(T, theta = 0,  tol=1e-14):
     T : ndarray, shape (n, n)
         A contraction: ||T||_2 <= 1.
     tol : float
-        Numerical tolerance used to determine the defect rank.
+        Numerical tolerance used to determine the defect index.
 
     Returns
     -------
@@ -64,7 +67,7 @@ def minimal_unitary_dilation(T, theta = 0,  tol=1e-14):
     J : ndarray, shape (n+d, n)
         Canonical embedding J = [I_n; 0].
     d : int
-        Defect rank.
+        Defect index.
     """
 
     T = np.asarray(T, dtype=complex)
@@ -78,9 +81,7 @@ def minimal_unitary_dilation(T, theta = 0,  tol=1e-14):
     # Check that T is a contraction.
     norm_T = np.linalg.norm(T, ord=2)
     if norm_T > 1 + tol:
-        raise ValueError(
-            f"T is not a contraction: ||T||_2 = {norm_T} > 1."
-        )
+        raise ValueError(f"T is not a contraction: ||T||_2 = {norm_T} > 1.")
 
     # Defect operators
     D_T, V = psd_sqrt_and_range(I - T.conj().T @ T, tol=tol)
@@ -89,8 +90,7 @@ def minimal_unitary_dilation(T, theta = 0,  tol=1e-14):
     d = V.shape[1]
     if V_star.shape[1] != d:
         raise RuntimeError(
-            "Numerically detected defect ranks do not agree. "
-            "Try adjusting tol."
+            "Numerically detected defect indexs do not agree. " "Try adjusting tol."
         )
 
     # Blocks of U
@@ -98,23 +98,17 @@ def minimal_unitary_dilation(T, theta = 0,  tol=1e-14):
     B = D_Tstar @ V_star
     C = V.conj().T @ D_T
     D = -V.conj().T @ T.conj().T @ V_star
-    W = np.exp(1j * theta) * np.eye(d) # could be any unitary of size d x d, but we choose the simplest one.
+    W = np.exp(1j * theta) * np.eye(
+        d
+    )  # could be any unitary of size d x d, but we choose the simplest one.
 
-    U = np.block([
-        [A, B],
-        [W @ C, W @ D]
-    ])
+    U = np.block([[A, B], [W @ C, W @ D]])
 
     W = np.exp(1j * theta) * np.eye(d)
 
     # Canonical embedding J : C^n -> C^(n+d)
-    J = np.vstack([
-        np.eye(n, dtype=complex),
-        np.zeros((d, n), dtype=complex)
-    ])
+    J = np.vstack([np.eye(n, dtype=complex), np.zeros((d, n), dtype=complex)])
     return U, J, d
-
-
 
 
 def unitary_dilation_with_shift(T, tol=1e-14, verbose=False):
@@ -125,28 +119,27 @@ def unitary_dilation_with_shift(T, tol=1e-14, verbose=False):
     T : ndarray, shape (n, n)
         A contraction: ||T||_2 <= 1.
     tol : float
-        Numerical tolerance used to determine the defect rank. (1e-14 is usually sufficient.)
+        Numerical tolerance used to determine the defect index. (1e-14 is usually sufficient.)
     Returns
     -------
     U : ndarray, shape (N, N)
         Unitary dilation of T, where N = n + p + m + 1.
     J : ndarray, shape (N, n)
         Canonical embedding J = [I_n; 0]."""
-    res = dilation(T,tol=tol,verbose=verbose)
-    Dal = res['Dal']
-    p = res['p']
-    m = res['m']
+    res = dilation(T, tol=tol, verbose=verbose)
+    Dal = res["Dal"]
+    p = res["p"]
+    m = res["m"]
 
-    U_S, J_S, d = minimal_unitary_dilation(res['S'], tol=tol)
-    assert d == 1 
-    block = np.zeros((p + m + 1, p + m+ 1), dtype=complex)
+    U_S, J_S, d = minimal_unitary_dilation(res["S"], tol=tol)
+    assert d == 1
+    block = np.zeros((p + m + 1, p + m + 1), dtype=complex)
     block[:p, :p], block[p:, p:] = Dal, U_S
-    U = np.kron(np.eye(res['N']), block)  # Extend to full dimension
+    U = np.kron(np.eye(res["N"]), block)  # Extend to full dimension
     block = np.zeros((p + m + 1, p + m), dtype=complex)
     block[:p, :p], block[p:, p:] = np.eye(p), J_S
-    J = np.kron(np.eye(res['N']), block) @ res['V']  # Extend to full dimension
+    J = np.kron(np.eye(res["N"]), block) @ res["V"]  # Extend to full dimension
     return U, J
-
 
 
 def spectral_projections(U, phase_tol=1e-14):
@@ -203,15 +196,18 @@ def spectral_projections(U, phase_tol=1e-14):
         eigenvalues.append(lam)
         projectors.append(E)
 
-    assert len(eigenvalues) == len(projectors), "Mismatch in number of eigenvalues and projectors."
-    assert np.allclose(U, np.sum([v * E for v, E in zip(eigenvalues, projectors)], axis=0)), "Sum of eigenvalues times projectors does not equal U."
+    assert len(eigenvalues) == len(
+        projectors
+    ), "Mismatch in number of eigenvalues and projectors."
+    assert np.allclose(
+        U, np.sum([v * E for v, E in zip(eigenvalues, projectors)], axis=0)
+    ), "Sum of eigenvalues times projectors does not equal U."
     return eigenvalues, projectors
 
 
-
-def extract_decomposition(U, J, n, T,verbose=False):
+def extract_decomposition(U, J, n, T, verbose=False):
     """
-    Given T = U J U^†, extract the decomposition of rho into a sum of density matrices. 
+    Given T = U J U^†, extract the decomposition of rho into a sum of density matrices.
 
     Parameters:
     - U: The unitary matrix from the Schur decomposition of T.
@@ -224,17 +220,16 @@ def extract_decomposition(U, J, n, T,verbose=False):
     - beta_k: List of density matrices on the B-side.
     """
 
-    lambdas, E_k= spectral_projections(U)
+    lambdas, E_k = spectral_projections(U)
     if verbose:
         print("Eigenvalues of U:", np.linalg.eigvals(U))
         print("Eigenvalues of U grouped:", np.real_if_close(lambdas))
 
     L_k = [J.conj().T @ E @ J for E in E_k]
-    p_k = [np.trace(L).real/n for L in L_k] 
+    p_k = [np.trace(L).real / n for L in L_k]
     beta_k = [L / np.trace(L).real if p > 1e-15 else L for p, L in zip(p_k, L_k)]
-    alpha_k = [1/2*(I2 + v.real *X + v.imag *Z) for v in lambdas]
+    alpha_k = [1 / 2 * (I2 + v.real * X + v.imag * Z) for v in lambdas]
     return p_k, alpha_k, beta_k
-
 
 
 if __name__ == "__main__":
@@ -243,11 +238,13 @@ if __name__ == "__main__":
     # T = U (+) A  in a rotated basis:  U = diag(1,1,i),  A = 2x2 Jordan block
     n = 6
     Ud = np.diag([np.exp(1j), np.exp(1j), -1j])
-    Ab = np.array([[0.41, 0.33, 0.11], [0.08, 0.52, 0.19], [0.21, 0.13, 0.49]], dtype=complex)
+    Ab = np.array(
+        [[0.41, 0.33, 0.11], [0.08, 0.52, 0.19], [0.21, 0.13, 0.49]], dtype=complex
+    )
     assert len(Ud) + len(Ab) == n
     T0 = np.zeros((n, n), dtype=complex)
-    T0[:len(Ud), :len(Ud)] = Ud
-    T0[len(Ud):, len(Ud):] = Ab
+    T0[: len(Ud), : len(Ud)] = Ud
+    T0[len(Ud) :, len(Ud) :] = Ab
     rng = np.random.default_rng(0)
     Q, R = np.linalg.qr(rng.normal(size=(n, n)) + 1j * rng.normal(size=(n, n)))
     Q = Q @ np.diag(np.diag(R) / abs(np.diag(R)))
@@ -257,8 +254,14 @@ if __name__ == "__main__":
     U, J = unitary_dilation_with_shift(T, verbose=True)
     assert np.allclose(T, J.conj().T @ U @ J), "Unitary dilation failed"
 
-    p, alpha, beta = extract_decomposition(U, J, n, T,True)
-    print( "sum p_k = ", np.sum(p))
-    reconstructed_rho = sum(p_k * np.kron(a_k, b_k) for p_k, a_k, b_k in zip(p, alpha, beta))
+    p, alpha, beta = extract_decomposition(U, J, n, T, True)
+    print("sum p_k = ", np.sum(p))
+    reconstructed_rho = sum(
+        p_k * np.kron(a_k, b_k) for p_k, a_k, b_k in zip(p, alpha, beta)
+    )
     print("Length of decomposition: ", len(p))
-    print("Check reconstruction: ",np.allclose(rho, reconstructed_rho), np.max(np.abs(rho - reconstructed_rho)))
+    print(
+        "Check reconstruction: ",
+        np.allclose(rho, reconstructed_rho),
+        np.max(np.abs(rho - reconstructed_rho)),
+    )

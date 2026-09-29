@@ -1,5 +1,6 @@
 import numpy as np
-from utils import osr,numerical_range
+from utils import osr, numerical_range
+
 
 def haar(n, rng=np.random.default_rng()):
     """Sample a Haar-random unitary matrix in C^{n x n}."""
@@ -7,18 +8,18 @@ def haar(n, rng=np.random.default_rng()):
     M = (rng.standard_normal((n, n)) + 1j * rng.standard_normal((n, n))) / np.sqrt(2)
     Q, R = np.linalg.qr(M)
     d = np.diag(R)
-    return Q * (d / np.abs(d))  
+    return Q * (d / np.abs(d))
 
 
 ########################## Density Matrices #########################
 
 
-def sample_dm_separable_osr3_pure(m = 2, rng = np.random.default_rng()):
+def sample_dm_separable_osr3_pure(m=2, rng=np.random.default_rng()):
     """
     Build a random separable state in M2⊗Mm with OSR exactly 3.
     Strategy: sum of 3 product pure states
     """
-    
+
     dim = 2 * m
     state = np.zeros((dim, dim), dtype=complex)
     for _ in range(3):
@@ -31,7 +32,10 @@ def sample_dm_separable_osr3_pure(m = 2, rng = np.random.default_rng()):
     state = state / np.trace(state)  # normalize
     return state
 
-def sample_dm_separable_osr3_mixed(m = 2, rng = np.random.default_rng(), complex_valued=True):
+
+def sample_dm_separable_osr3_mixed(
+    m=2, rng=np.random.default_rng(), complex_valued=True
+):
     """
     Build a random separable state in M2⊗M2 with OSR exactly 3 and rank 4.
     Strategy: sum of 3 product pure states, then check OSR.
@@ -65,18 +69,22 @@ def sample_bipartite_dm(n, d, rng=None, tol=1e-9, max_attempts=100):
     if n < 2:
         raise ValueError("Need n>=2 for operator Schmidt rank 3 to exist.")
     if not (3 <= d <= 2 * n):
-        raise ValueError("Need 3<=d<=2n  (d=1 forces OSR∈{1,4}; d=2 cannot reach OSR 3).")
+        raise ValueError(
+            "Need 3<=d<=2n  (d=1 forces OSR∈{1,4}; d=2 cannot reach OSR 3)."
+        )
 
     if rng is None:
         rng = np.random.default_rng()
     for _ in range(max_attempts):
-        C0 = (rng.standard_normal((n, d)) + 1j * rng.standard_normal((n, d))) / np.sqrt(2)
-        C = np.vstack([C0, C0 @ haar(d, rng)])          # C = [[C0],[C0 U]] ∈ C^{2n×d}
-        rho = C @ C.conj().T                        # ⪰0, equal diagonal blocks ⇒ M3=0 ⇒ OSR≤3
-        u = haar(2, rng)                                 # rotate the absent operator-direction off Z
+        C0 = (rng.standard_normal((n, d)) + 1j * rng.standard_normal((n, d))) / np.sqrt(
+            2
+        )
+        C = np.vstack([C0, C0 @ haar(d, rng)])  # C = [[C0],[C0 U]] ∈ C^{2n×d}
+        rho = C @ C.conj().T  # ⪰0, equal diagonal blocks ⇒ M3=0 ⇒ OSR≤3
+        u = haar(2, rng)  # rotate the absent operator-direction off Z
         rho = np.kron(u, np.eye(n)) @ rho @ np.kron(u, np.eye(n)).conj().T
         rho = 0.5 * (rho + rho.conj().T)
-        rho /= np.trace(rho).real                   # tr = 1
+        rho /= np.trace(rho).real  # tr = 1
 
         ev = np.linalg.eigvalsh(rho)
         if int(np.sum(ev > tol * ev[-1])) == d and osr(rho) == 3:
@@ -87,12 +95,13 @@ def sample_bipartite_dm(n, d, rng=None, tol=1e-9, max_attempts=100):
 ########################## Contraction ##############################
 
 
-def sample_contraction(n, rng = np.random.default_rng()):
+def sample_contraction(n, rng=np.random.default_rng()):
     """Sample A in C^{n x n} with ||A||_2 = 1 (largest singular value = 1)."""
     U, V = haar(n, rng), haar(n, rng)
     s = rng.uniform(0, 1, n)
     s[0] = 1.0  # force ||A||_2 = 1
-    return (U * s) @ V.conj().T  
+    return (U * s) @ V.conj().T
+
 
 def sample_rank1_defect_contraction(n, sigma=None, complex_matrix=True, rng=None):
     """
@@ -132,21 +141,22 @@ def sample_rank1_defect_contraction(n, sigma=None, complex_matrix=True, rng=None
     return A
 
 
-def sample_hard_contraction(n, rng = np.random.default_rng()):
+def sample_hard_contraction(n, rng=np.random.default_rng()):
     """Sample A in C^{n x n} with ||A||_2 = 1 (largest singular value = 1) and eigenvalues > cos(pi/(n+1)).
     Constructed thanks to Schur decomposition to enforce eigenvalues on the complex diagonal, and add small random upper-triangular noise.
     """
     U = haar(n, rng)
     angles = np.sort(rng.uniform(0, 2 * np.pi, n))
     D = np.diag(np.cos(angles) + 1j * np.sin(angles))
-    N = np.triu(rng.standard_normal((n, n)) + 1j * rng.standard_normal((n, n)), k=1) / 1e2
+    N = (
+        np.triu(rng.standard_normal((n, n)) + 1j * rng.standard_normal((n, n)), k=1)
+        / 1e2
+    )
     norm = np.linalg.norm(U @ (D + N) @ U.conj().T, 2)
     return U @ (D + N) @ U.conj().T / norm
 
 
-
-
-def sample_round_contraction(n, rng =np.random.default_rng()):
+def sample_round_contraction(n, rng=np.random.default_rng()):
     """Sample A in C^{n x n} with ||A||_2 = 1 and w(A) close to a round disk."""
     while True:
         A = sample_contraction(n, rng)

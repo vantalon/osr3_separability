@@ -4,7 +4,6 @@ from numpy.linalg import svd, eigh, inv
 dag = lambda M: M.conj().T
 
 
-# ----------------------------------------------------------------- utilities
 def _nullspace(M, tol):
     """Orthonormal basis (columns) of ker M."""
     if M.shape[0] == 0:
@@ -14,7 +13,6 @@ def _nullspace(M, tol):
     return Vh[r:].conj().T
 
 
-# --------------------------------------------------- unitary / c.n.u. splitting
 def canonical_split(T, tol=1e-14):
     """
     Return (Qu, Qa, U, A): orthonormal bases of the maximal unitary reducing
@@ -105,7 +103,6 @@ def _phi_norm(A, lam):
     return np.linalg.norm(P, 2)
 
 
-# ----------------------------------------------------------- Livsic triangular
 def S_of_Lambda(lam):
     """Livsic triangular form S(Lambda); matrix of the compressed shift."""
     lam = np.asarray(lam, dtype=complex)
@@ -139,11 +136,12 @@ def _malmquist_walsh_of_A(A, lam):
     for j in range(m - 1, -1, -1):
         lj = lam[j]
         suf[j] = suf[j + 1] @ (lj * I - A) @ inv(I - np.conj(lj) * A)
-    return [((-1.0) ** j) * d[j] * inv(I - np.conj(lam[j]) * A) @ suf[j + 1]
-            for j in range(m)]
+    return [
+        ((-1.0) ** j) * d[j] * inv(I - np.conj(lam[j]) * A) @ suf[j + 1]
+        for j in range(m)
+    ]
 
 
-# ------------------------------------------------------------------ isometries
 def isometry_A(A, lam, tol=1e-9):
     """
     W : H_a -> (+)^{r_A} K_phi,   (Wx)(z) = D_{A*}(I - z A*)^{-1} x.
@@ -156,7 +154,7 @@ def isometry_A(A, lam, tol=1e-9):
     w, Q = eigh((Def + dag(Def)) / 2)
     idx = [i for i in range(n) if w[i].real > tol]
     rA = len(idx)
-    F = Q[:, idx] * np.sqrt(np.clip(w[idx].real, 0, None))   # columns D_{A*} f_i
+    F = Q[:, idx] * np.sqrt(np.clip(w[idx].real, 0, None))  # columns D_{A*} f_i
 
     E = _malmquist_walsh_of_A(A, lam)
     m = len(lam)
@@ -187,14 +185,13 @@ def isometry_U(U, alphas, mults, N, tol=1e-7):
         if ids:
             Qk, _ = np.linalg.qr(X[:, ids])
             X[:, ids] = Qk
-    Xinv = inv(X)                      # coordinates of H_u basis in eigenbasis
+    Xinv = inv(X)  # coordinates of H_u basis in eigenbasis
     for t in range(q):
         k, i = cols[t]
         VU[i * p + k, :] += Xinv[t, :]
     return VU
 
 
-# ----------------------------------------------------------------- main driver
 def dilation(T, tol=1e-14, verbose=False, mode="minimal"):
     """Return a dict with V, V_U, V_A, B and all intermediate data."""
     T = np.asarray(T, dtype=complex)
@@ -203,8 +200,8 @@ def dilation(T, tol=1e-14, verbose=False, mode="minimal"):
         raise ValueError("T is not a contraction")
 
     Qu, Qa, U, A = canonical_split(T, tol)
-    alphas, mults = distinct_eigs(U)
-    p = len(alphas)
+    us, mults = distinct_eigs(U)
+    p = len(us)
     rU = max(mults) if mults else 0
 
     lam = minimal_polynomial_roots(A, tol, mode)
@@ -212,36 +209,57 @@ def dilation(T, tol=1e-14, verbose=False, mode="minimal"):
     W, rA = isometry_A(A, lam, 1e-9)
     N = max(rU, rA, 1)
     if verbose:
-        print("alphas   =", np.round(alphas, 4), " mults =", mults)
+        print("alphas   =", np.round(us, 4), " mults =", mults)
         print("Lambda   =", np.round(lam, 4))
         print("r_U =", rU, " r_A =", rA, " N =", N, " p =", p, " m =", m)
 
     S = S_of_Lambda(lam)
-    Dal = np.diag(alphas) if p else np.zeros((0, 0), complex)
+    Dal = np.diag(us) if p else np.zeros((0, 0), complex)
     block = np.zeros((p + m, p + m), dtype=complex)
     block[:p, :p], block[p:, p:] = Dal, S
     B = np.kron(np.eye(N), block)
 
-    VU = isometry_U(U, alphas, mults, N)
+    VU = isometry_U(U, us, mults, N)
     # embed into (+)^N (C^p (+) K_phi)
     V = np.zeros((N * (p + m), n), dtype=complex)
     for i in range(N):
         if p:
-            V[i * (p + m): i * (p + m) + p, :] += VU[i * p:(i + 1) * p, :] @ dag(Qu)
+            V[i * (p + m) : i * (p + m) + p, :] += VU[i * p : (i + 1) * p, :] @ dag(Qu)
         if m and i < rA:
-            V[i * (p + m) + p: (i + 1) * (p + m), :] += W[i * m:(i + 1) * m, :] @ dag(Qa)
+            V[i * (p + m) + p : (i + 1) * (p + m), :] += W[
+                i * m : (i + 1) * m, :
+            ] @ dag(Qa)
 
     Vu_full = np.zeros_like(V)
     Va_full = np.zeros_like(V)
     for i in range(N):
         if p:
-            Vu_full[i * (p + m): i * (p + m) + p, :] = VU[i * p:(i + 1) * p, :] @ dag(Qu)
+            Vu_full[i * (p + m) : i * (p + m) + p, :] = VU[
+                i * p : (i + 1) * p, :
+            ] @ dag(Qu)
         if m and i < rA:
-            Va_full[i * (p + m) + p: (i + 1) * (p + m), :] = W[i * m:(i + 1) * m, :] @ dag(Qa)
+            Va_full[i * (p + m) + p : (i + 1) * (p + m), :] = W[
+                i * m : (i + 1) * m, :
+            ] @ dag(Qa)
 
-    return dict(V=V, V_U=Vu_full, V_A=Va_full, B=B, W=W, Dal =Dal, S=S, U=U, A=A,
-                Qu=Qu, Qa=Qa, alphas=alphas, mults=mults, Lambda=lam,
-                r_U=rU, r_A=rA, N=N, p=p, m=m)
+    return dict(
+        V=V,
+        V_U=Vu_full,
+        V_A=Va_full,
+        B=B,
+        W=W,
+        Dal=Dal,
+        S=S,
+        U=U,
+        A=A,
+        mults=mults,
+        Lambda=lam,
+        r_U=rU,
+        r_A=rA,
+        N=N,
+        p=p,
+        m=m,
+    )
 
 
 def check(res, T, kmax=8):
@@ -263,26 +281,40 @@ def check(res, T, kmax=8):
     return dict(isometry=e_iso, dilation=e_dil, intertwining=e_int)
 
 
-# ------------------------------------------------------------------- demo
 if __name__ == "__main__":
     np.set_printoptions(precision=4, suppress=True, linewidth=140)
 
     # T = U (+) A  in a rotated basis
     n = 5
     Ud = np.diag([1.0 + 0j, -1j])
-    Ab = np.array([[0.42, 0.33, 0.11], [0.08, 0.52, 0.19], [0.21, 0.13, 0.49]], dtype=complex)
+    Ab = np.array(
+        [[0.42, 0.33, 0.11], [0.08, 0.52, 0.19], [0.21, 0.13, 0.49]], dtype=complex
+    )
     assert len(Ud) + len(Ab) == n
     T0 = np.zeros((n, n), dtype=complex)
-    T0[:len(Ud), :len(Ud)] = Ud
-    T0[len(Ud):, len(Ud):] = Ab
+    T0[: len(Ud), : len(Ud)] = Ud
+    T0[len(Ud) :, len(Ud) :] = Ab
     rng = np.random.default_rng(0)
     Q, R = np.linalg.qr(rng.normal(size=(n, n)) + 1j * rng.normal(size=(n, n)))
     Q = Q @ np.diag(np.diag(R) / abs(np.diag(R)))
     T = Q @ T0 @ dag(Q)
 
     res = dilation(T)
-    print("alphas   =", np.round(res["alphas"], 4), " mults =", res["mults"])
-    print("Lambda   =", np.round(res["Lambda"], 4))
-    print("r_U =", res["r_U"], " r_A =", res["r_A"], " N =", res["N"],
-          " p =", res["p"], " m =", res["m"])
+    print("T = U \oplus A")
+    print(
+        "eigenvalues of U :", np.round(np.diag(res["Dal"]), 4), " mults =", res["mults"]
+    )
+    print("eigenvalues of A :", np.round(res["Lambda"], 4))
+    print(
+        "r_U =",
+        res["r_U"],
+        " r_A =",
+        res["r_A"],
+        " N =",
+        res["N"],
+        " p =",
+        res["p"],
+        " m =",
+        res["m"],
+    )
     print("\nchecks:", {k: f"{v:.2e}" for k, v in check(res, T).items()})
