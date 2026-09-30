@@ -71,9 +71,10 @@ For each $k$ with $L_k \neq 0$, define
 
 $$
   p_k = \frac{Tr(L_k)}{m}, \qquad
-  \alpha_k = \tfrac12\bigl(\Id{2} + \cos\theta_k\,X + \sin\theta_k\,Z\bigr), \qquad
+  \alpha_k = \tfrac12\bigl(I_2 + \cos\theta_k\,X + \sin\theta_k\,Z\bigr), \qquad
   \beta_k = \frac{L_k}{m\,p_k}.
 $$
+
 The decomposition of $\rho_3$ is then $\rho_3 = \sum_k p_k\,\alpha_k \otimes \beta_k$.
 
 *Step 4: invert Step 1 with* `inverse_all_filterings` in `filtering.py`
