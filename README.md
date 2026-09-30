@@ -55,7 +55,12 @@ $$
 Let $T = C_1 + iC_3$ be the associated contraction, and $d = rank\,(I - T^\dagger T)^{1/2}$ its defect index.
 
 *Step 2A: dilation for the pure-state decomposition in* `dilation.py`
-Compute the dilation $U_2$ of $T$ on $\mathbb{C}^m \oplus \mathbb{C}^d$ given by Lem 6.5, and set $J_2 = \begin{psmallmatrix} \Id m \\ 0_d \end{psmallmatrix}$ for the isometry(` minimal_unitary_dilation`).
+Compute the dilation $U_2$ of $T$ on $\mathbb{C}^m \oplus \mathbb{C}^d$ given by Lem 6.5, and set 
+
+$$J_2 = \begin{pmatrix} I_m \\ 
+                        0_d \end{pmatrix}$$ 
+
+for the isometry(` minimal_unitary_dilation`).
 
 *Step 2B: dilation for the mixed-state decomposition in* `dilation.py`
 Compute the dilation $U_3$ of $T$ given by Thm. 6.9 , and the isometry $J_3$ given in App. C (`unitary_dilation_with_shift`).
