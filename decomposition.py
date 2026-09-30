@@ -19,7 +19,7 @@ pure_decomposition = True
 rho = sample_bipartite_dm(n, d=4, rng=rng)
 
 
-rho_PT, V1 = cariello_decomposition(rho, n)
+rho_PT, V1 = cariello_filtering(rho, n)
 
 assert np.allclose(
     rho_PT, partial_transpose_A(rho_PT, n)

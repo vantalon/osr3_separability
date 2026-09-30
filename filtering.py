@@ -86,7 +86,7 @@ def rotate_hsd_positive_first(lambdas, Es, Fs):
     return lambdas_new, Es_new, Fs_new
 
 
-def cariello_decomposition(rho, n=2, tol=1e-15, verbose=False):
+def cariello_filtering(rho, n=2, tol=1e-15, verbose=False):
     """
     Compute the Carriello SLOCC filtering of rho ∈ M2 ⊗ Mn, returning (rho_new, Filter) with rho_new = Filter† rho Filter / Tr(Filter† rho Filter)
     """
@@ -241,7 +241,7 @@ if __name__ == "__main__":
         np.linalg.eigvalsh(Es[0]) >= -1e-12
     ), "First Es is not PSD after rotation"
 
-    rho_new, F = cariello_decomposition(rho, m)
+    rho_new, F = cariello_filtering(rho, m)
     rho_pt = partial_transpose_A(rho_new, m)
     assert np.allclose(rho_pt, rho_new), "Partial transpose invariance failed"
 

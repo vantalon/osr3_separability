@@ -422,7 +422,7 @@ if __name__ == "__main__":
         for i in range(2):
             n += 4
             rho = sample_bipartite_dm(n, d=2 * n, rng=rng)
-            rho_new, F = cariello_decomposition(rho, n)
+            rho_new, F = cariello_filtering(rho, n)
             rho_mm, F_mm = maximally_mixed_B_marginals(rho_new, n)
             print(
                 f"Trace of rho: {np.trace(rho_mm):.4f}",
@@ -449,7 +449,7 @@ if __name__ == "__main__":
         n = 5
         for i in range(nb_figs):
             rho = sample_bipartite_dm(n, d=n + i * 2 + 1, rng=rng)
-            rho_new, F = cariello_decomposition(rho, n)
+            rho_new, F = cariello_filtering(rho, n)
             rho_mm, F_mm = maximally_mixed_B_marginals(rho_new, n)
             print(
                 f"Trace of rho: {np.trace(rho_mm):.4f}",
@@ -492,7 +492,7 @@ if __name__ == "__main__":
         print("Random seed:", seed)
         rng = np.random.default_rng(seed)
         rho = sample_bipartite_dm(n, d=n + 1, rng=rng)
-        rho_new, F = cariello_decomposition(rho, n)
+        rho_new, F = cariello_filtering(rho, n)
         rho_mm, F_mm = maximally_mixed_B_marginals(rho_new, n)
         print(
             "Trace of rho:",
@@ -521,7 +521,7 @@ if __name__ == "__main__":
         for i in range(nb_figs):
             n += 3
             rho = sample_bipartite_dm(n, d=2 * n, rng=rng)
-            rho_new, F = cariello_decomposition(rho, n)
+            rho_new, F = cariello_filtering(rho, n)
             rho_mm, F_mm = maximally_mixed_B_marginals(rho_new, n)
             print(
                 f"Trace of rho: {np.trace(rho_mm):.4f}",
@@ -569,7 +569,7 @@ if __name__ == "__main__":
         print("Random seed:", seed)
         rng = np.random.default_rng(seed)
         rho = sample_bipartite_dm(n, d=2 * n, rng=rng)
-        rho_new, F = cariello_decomposition(rho, n)
+        rho_new, F = cariello_filtering(rho, n)
         rho_mm, F_mm = maximally_mixed_B_marginals(rho_new, n)
         print(
             "Trace of rho:",
