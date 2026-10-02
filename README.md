@@ -66,7 +66,7 @@ for the isometry(` minimal_unitary_dilation`).
 Compute the dilation $U_3$ of $T$ given by Thm. 6.9 , and the isometry $J_3$ given in App. C (`unitary_dilation_with_shift`).
 
 *Step 3: the decomposition with* `extract_decomposition` in `dilation.py`
-Fix $j \in \{2,3\}$. Let $e^{i\theta_1},\dots,e^{i\theta_r}$ be the $r$ eigenvalues of $U_j$. The eigenvalues are taken with their multiplicity for the decomposition with pure product states and distinct for the decomposition with mixed product states. Let $E_k$ be the orthogonal projection onto the eigenspace of $e^{i\theta_k}$, $1 \le k \le r$. The projector $E_k$ has $\rk 1$ for the decomposition with pure product states. Define
+Fix $j \in \{2,3\}$. Let $e^{i\theta_1},\dots,e^{i\theta_r}$ be the $r$ eigenvalues of $U_j$. The eigenvalues are taken with their multiplicity for the decomposition with pure product states and distinct for the decomposition with mixed product states. Let $E_k$ be the orthogonal projection onto the eigenspace of $e^{i\theta_k}$, $1 \le k \le r$. The projector $E_k$ has $\text{rank} 1$ for the decomposition with pure product states. Define
 
 $$
     L_k = J_j^\dagger E_k J_j .
