@@ -66,7 +66,7 @@ for the isometry(` minimal_unitary_dilation`).
 Compute the dilation $U_3$ of $T$ given by Thm. 6.9 , and the isometry $J_3$ given in App. C (`unitary_dilation_with_shift`).
 
 *Step 3: the decomposition with* `extract_decomposition` in `dilation.py`
-Fix $j \in \{2,3\}$. Let $e^{i\theta_1},\dots,e^{i\theta_r}$ be the $r$ distinct eigenvalues of $U_j$, and $E_k$ the orthogonal projection onto the eigenspace of $e^{i\theta_k}$, $1 \le k \le r$. Define
+Fix $j \in \{2,3\}$. Let $e^{i\theta_1},\dots,e^{i\theta_r}$ be the $r$ eigenvalues of $U_j$. The eigenvalues are taken with their multiplicity for the decomposition with pure product states and distinct for the decomposition with mixed product states. Let $E_k$ be the orthogonal projection onto the eigenspace of $e^{i\theta_k}$, $1 \le k \le r$. The projector $E_k$ has $\rk 1$ for the decomposition with pure product states. Define
 
 $$
     L_k = J_j^\dagger E_k J_j .
@@ -98,7 +98,7 @@ $$
 
 Then $\rho_1 = \sum_k p'_k \alpha_k\otimes \zeta_k$.
 
-(3)  Compute $\xi_k = \frac{V_1^{-\dagger } \alpha_k  V_1^{-\dagger}}{Tr [V_1^{-\dagger } \alpha_k  V_1^{-\dagger}]}$, and  $p''_k = p'_k\frac{Tr [V_1^{-\dagger } \alpha_k  V_1^{-\dagger}]}{Tr\bigl[(V_1^\dagger \otimes I_n)\,\rho_1\,(V_1 \otimes I_n)\bigr]]}$. Then the final decomposition is 
+(3)  Compute $\xi_k = \frac{V_1^{-\dagger } \alpha_k  V_1^{-\dagger}}{Tr [V_1^{-\dagger } \alpha_k  V_1^{-1}]}$, and  $p''_k = p'_k\frac{Tr [V_1^{-\dagger } \alpha_k  V_1^{-1}]}{Tr\bigl[(V_1^{-\dagger } \otimes I_n)\,\rho_1\,(V_1^{-1} \otimes I_n)\bigr]]}$. Then the final decomposition is 
 
 $$
   \rho =  \sum_k p''_k \xi_k \otimes \zeta_k .
