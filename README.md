@@ -1,6 +1,6 @@
 # osr3_separability
 
-This is the code supporting *Separable decompositions of 2 x n states with operator Schmidt rank three*. 
+This is the code supporting *Separable decompositions of 2 x n states with operator Schmidt rank three* (https://arxiv.org/abs/2609.39669). 
 
 The figures of the paper can be reproduced thanks to `figure.py`. An example of end to end decomposition is written in `decomposition.py`.
 
